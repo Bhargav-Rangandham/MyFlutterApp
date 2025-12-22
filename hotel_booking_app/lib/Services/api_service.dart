@@ -144,6 +144,38 @@ class ApiService {
       return {"success": false};
     }
   }
+
+  /* ============================================================
+     🔐 CHANGE PASSWORD (PROFILE – WITH CURRENT PASSWORD)
+     ============================================================ */
+
+  static Future<bool> changePasswordWithCurrent({
+    required String email,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/app/change-password');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": email.trim(),
+          "currentPassword": currentPassword,
+          "newPassword": newPassword,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
+    } catch (e) {
+      print('❌ Change Password (Profile) Error: $e');
+    }
+    return false;
+  }
 }
 
 /// ================== PROFILE APIs ==================
@@ -207,11 +239,11 @@ class ProfileApiService {
     }
   }
 
-  /// 🔹 Deactivate Account (🔥 REQUIRED BY profile.dart)
+  /// 🔹 Deactivate Account
   static Future<bool> deactivateAccount({
     required String email,
     required String userId,
-    required String status, // "Inactive"
+    required String status,
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/profile');
 

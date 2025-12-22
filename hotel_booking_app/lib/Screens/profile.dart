@@ -266,7 +266,16 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
       countryCodeController,
       addressController;
 
-  bool isEditing = false, isLoading = false, isFetching = true, isDeleting = false;
+  final TextEditingController currentPasswordController =
+  TextEditingController();
+  final TextEditingController newPasswordController =
+  TextEditingController();
+
+  bool isEditing = false,
+      isLoading = false,
+      isFetching = true,
+      isDeleting = false,
+      isChangingPassword = false;
 
   @override
   void initState() {
@@ -307,6 +316,96 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
       });
     }
   }
+
+  /* ================= CHANGE PASSWORD ================= */
+
+  void openChangePasswordDialog() {
+    currentPasswordController.clear();
+    newPasswordController.clear();
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Change Password"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: currentPasswordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: "Current Password",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: newPasswordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: "New Password",
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: isChangingPassword
+                ? null
+                : () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: isChangingPassword ? null : changePassword,
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: isChangingPassword
+                ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: Colors.white),
+            )
+                : const Text("Change"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> changePassword() async {
+    if (currentPasswordController.text.isEmpty ||
+        newPasswordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all fields")),
+      );
+      return;
+    }
+
+    setState(() => isChangingPassword = true);
+
+    final success = await ApiService.changePasswordWithCurrent(
+      email: widget.email,
+      currentPassword: currentPasswordController.text,
+      newPassword: newPasswordController.text,
+    );
+
+    setState(() => isChangingPassword = false);
+
+    Navigator.pop(context);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? "Password Changed Successfully"
+              : "Enter the Correct Password",
+        ),
+      ),
+    );
+  }
+
+  /* ================= EXISTING METHODS (UNCHANGED) ================= */
 
   Future<void> updateProfile() async {
     final mobile = phoneController.text.trim();
@@ -362,18 +461,115 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Delete Account", style: TextStyle(color: Colors.red)),
+        title:
+        const Text("Delete Account", style: TextStyle(color: Colors.red)),
         content: const Text("This action is permanent. Continue?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
           TextButton(
-            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel")),
+          TextButton(
+            child:
+            const Text("Delete", style: TextStyle(color: Colors.red)),
             onPressed: () {
               Navigator.pop(context);
               deleteAccount();
             },
           ),
         ],
+      ),
+    );
+  }
+
+  /* ================= UI ================= */
+
+  @override
+  Widget build(BuildContext context) {
+    if (isFetching) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile Details'),
+        backgroundColor: Colors.green.shade700,
+        actions: [
+          IconButton(
+            icon: Icon(isEditing ? Icons.close : Icons.edit),
+            onPressed: () => setState(() => isEditing = !isEditing),
+          )
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const CircleAvatar(
+                      radius: 45,
+                      backgroundColor: Colors.green,
+                      child:
+                      Icon(Icons.person, size: 50, color: Colors.white),
+                    ),
+                    const SizedBox(height: 15),
+                    buildField("First Name", firstNameController,
+                        enabled: isEditing),
+                    buildField("Last Name", lastNameController,
+                        enabled: isEditing),
+                    buildField("Email", emailController, enabled: false),
+                    buildPhoneField(),
+                    buildField("Address", addressController,
+                        enabled: isEditing),
+                  ],
+                ),
+              ),
+            ),
+
+            /// 🔐 CHANGE PASSWORD BUTTON
+            ElevatedButton(
+              onPressed: openChangePasswordDialog,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                minimumSize: const Size(double.infinity, 45),
+              ),
+              child: const Text("Change Password"),
+            ),
+
+            const SizedBox(height: 10),
+
+            TextButton.icon(
+              onPressed: isDeleting ? null : confirmDelete,
+              icon: isDeleting
+                  ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.delete, color: Colors.red),
+              label: const Text("Delete Account",
+                  style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildField(String label, TextEditingController controller,
+      {bool enabled = true}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: TextField(
+        enabled: enabled,
+        controller: controller,
+        decoration: InputDecoration(
+          border: const OutlineInputBorder(),
+          labelText: label,
+          filled: true,
+          fillColor: enabled ? Colors.white : Colors.grey.shade200,
+        ),
       ),
     );
   }
@@ -407,86 +603,6 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
           ),
         )
       ],
-    );
-  }
-
-  Widget buildField(String label, TextEditingController controller,
-      {bool enabled = true}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: TextField(
-        enabled: enabled,
-        controller: controller,
-        decoration: InputDecoration(
-          border: OutlineInputBorder(),
-          labelText: label,
-          filled: true,
-          fillColor: enabled ? Colors.white : Colors.grey.shade200,
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (isFetching) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile Details'),
-        backgroundColor: Colors.green.shade700,
-        actions: [
-          IconButton(
-            icon: Icon(isEditing ? Icons.close : Icons.edit),
-            onPressed: () => setState(() => isEditing = !isEditing),
-          )
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const CircleAvatar(
-                      radius: 45,
-                      backgroundColor: Colors.green,
-                      child: Icon(Icons.person, size: 50, color: Colors.white),
-                    ),
-                    const SizedBox(height: 15),
-                    buildField("First Name", firstNameController, enabled: isEditing),
-                    buildField("Last Name", lastNameController, enabled: isEditing),
-                    buildField("Email", emailController, enabled: false),
-                    buildPhoneField(),
-                    buildField("Address", addressController, enabled: isEditing),
-                  ],
-                ),
-              ),
-            ),
-            if (isEditing)
-              ElevatedButton(
-                onPressed: isLoading ? null : updateProfile,
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green, minimumSize: const Size(double.infinity, 50)),
-                child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Save Changes"),
-              ),
-            const SizedBox(height: 10),
-            TextButton.icon(
-              onPressed: isDeleting ? null : confirmDelete,
-              icon: isDeleting
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.delete, color: Colors.red),
-              label: const Text("Delete Account", style: TextStyle(color: Colors.red)),
-            )
-          ],
-        ),
-      ),
     );
   }
 }
