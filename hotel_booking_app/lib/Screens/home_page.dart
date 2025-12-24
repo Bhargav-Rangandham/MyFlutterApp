@@ -40,28 +40,52 @@ class _HomePageState extends State<HomePage> {
 
   final List<Map<String, dynamic>> categories = [
     {
-      'title': 'Hotels',
+      'title': 'Dormitory',
       'icon': Icons.hotel,
+      'type': 'Dormitory',
+      'color': [Color(0xFF263238), Color(0xFF607D8B)]
+    },
+    {
+      'title': 'Farm Stays',
+      'icon': Icons.agriculture,
+      'type': 'Farm Stay',
+      'color': [Color(0xFF1B5E20), Color(0xFF4CAF50)]
+    },
+    {
+      'title': 'Home Stays',
+      'icon': Icons.house,
+      'type': 'Home Stay',
+      'color': [Color(0xFF00695C), Color(0xFF4DB6AC)]
+    },
+    {
+      'title': 'Hotels',
+      'icon': Icons.business,
       'type': 'Hotel',
-      'color': [Color(0xFF2E7D32), Color(0xFF81C784)]
-    },
-    {
-      'title': 'Resorts',
-      'icon': Icons.beach_access,
-      'type': 'Resort',
-      'color': [Color(0xFF00897B), Color(0xFF4DB6AC)]
-    },
-    {
-      'title': 'Villas',
-      'icon': Icons.house_rounded,
-      'type': 'Villa',
-      'color': [Color(0xFF6A1B9A), Color(0xFFBA68C8)]
+      'color': [Color(0xFF880E4F), Color(0xFFF06292)]
     },
     {
       'title': 'Paying Guests',
       'icon': Icons.apartment_rounded,
       'type': 'paying guest',
       'color': [Color(0xFF0277BD), Color(0xFF4FC3F7)]
+    },
+    {
+      'title': 'Party Rooms',
+      'icon': Icons.nightlife,
+      'type': 'Party Room',
+      'color': [Color(0xFFBF360C), Color(0xFFFFA726)]
+    },
+    {
+      'title': 'Resorts',
+      'icon': Icons.pool,
+      'type': 'Resort',
+      'color': [Color(0xFFee0979), Color(0xFFff6a00)]
+    },
+    {
+      'title': 'Villas',
+      'icon': Icons.house_rounded,
+      'type': 'Villa',
+      'color': [Color(0xFF6A1B9A), Color(0xFFBA68C8)]
     },
   ];
 
