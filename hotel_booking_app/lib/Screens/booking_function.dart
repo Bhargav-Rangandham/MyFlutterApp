@@ -168,7 +168,7 @@ class _BookingPageState extends State<BookingPage> {
   int get daysOfStay {
     if (checkInDate == null || checkOutDate == null) return 0;
     final diff = checkOutDate!.difference(checkInDate!).inDays;
-    return diff >= 0 ? diff + 1 : 0;
+    return diff >= 0 ? diff : 0;
   }
 
   double get roomPricePerDay {
